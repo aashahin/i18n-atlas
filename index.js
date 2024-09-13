@@ -1,23 +1,10 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import countriesData from "./data/countries.json";
+import statesData from "./data/states.json";
 
 class I18nAtlas {
   constructor() {
-    const countriesData = fs.readFileSync(
-      path.join(__dirname, "data", "countries.json"),
-      "utf8",
-    );
-    const statesData = fs.readFileSync(
-      path.join(__dirname, "data", "states.json"),
-      "utf8",
-    );
-
-    this.countries = JSON.parse(countriesData);
-    this.states = JSON.parse(statesData);
+    this.countries = countriesData;
+    this.states = statesData;
   }
 
   getAllCountries() {

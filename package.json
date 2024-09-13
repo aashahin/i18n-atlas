@@ -1,8 +1,9 @@
 {
   "name": "i18n-atlas",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "A multilingual package for retrieving countries and states information, including translations for country names in 16 languages.",
   "main": "index.js",
+  "types": "index.d.ts",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,9 +14,11 @@
     "geography"
   ],
   "author": "Abdelrahman Shaheen",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": "https://github.com/aashahin/i18n-atlas",
   "files": [
     "index.js",
+    "index.d.ts",
     "data/"
   ]
 }
