@@ -125,12 +125,4 @@ class I18nAtlas {
   });
 }
 
-const atlas = new I18nAtlas({
-  preload: true,
-  useMap: true,
-  cacheResults: true,
-  cacheDuration: 10,
-});
-console.log(atlas.getAllCountries());
-
 export default I18nAtlas;

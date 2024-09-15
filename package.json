@@ -1,6 +1,6 @@
 {
   "name": "i18n-atlas",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A multilingual package for retrieving countries and states information, including translations for country names in 16 languages.",
   "main": "index.js",
   "types": "index.d.ts",
