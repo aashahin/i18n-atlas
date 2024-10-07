@@ -1,10 +1,6 @@
-import countriesData from "./data/countries.json" assert { type: "json" };
-import statesData from "./data/states.json" assert { type: "json" };
-
 class I18nAtlas {
   constructor(options = {}) {
     this.options = {
-      preload: options.preload || false,
       useMap: options.useMap !== undefined ? options.useMap : true,
       cacheResults: options.cacheResults || false,
       cacheDuration: options.cacheDuration || 3600,
@@ -15,60 +11,38 @@ class I18nAtlas {
     this.statesData = null;
     this.countryMap = null;
     this.stateMap = null;
-    this.countryCodeSet = null;
     this.cache = new Map();
+  }
 
-    if (this.options.preload) {
-      this.preloadData();
+  async loadCountriesData() {
+    if (!this.countriesData) {
+      const module = await import("./data/countries.json");
+      this.countriesData = module.default;
+      if (this.options.useMap) {
+        this.countryMap = new Map(
+          this.countriesData.flatMap((country) => [
+            [country.iso2, country],
+            [country.iso3, country],
+          ]),
+        );
+      }
     }
   }
 
-  preloadData() {
-    if (!this.countriesData) this.countriesData = countriesData;
-    if (!this.statesData) this.statesData = statesData;
-    if (this.options.useMap && !this.countryCodeSet) {
-      this.initializeCountryCodeSet();
+  async loadStatesData() {
+    if (!this.statesData) {
+      const module = await import("./data/states.json");
+      this.statesData = module.default;
+      if (this.options.useMap) {
+        this.stateMap = this.statesData.reduce((map, state) => {
+          if (!map.has(state.country_code)) {
+            map.set(state.country_code, []);
+          }
+          map.get(state.country_code).push(state);
+          return map;
+        }, new Map());
+      }
     }
-  }
-
-  initializeCountryCodeSet() {
-    this.countryCodeSet = new Set(
-      this.countriesData.flatMap((country) => [country.iso2, country.iso3]),
-    );
-  }
-
-  lazyInitializeCountryMap() {
-    if (!this.countryMap) {
-      this.countryMap = new Map(
-        this.countriesData.flatMap((country) => [
-          [country.iso2, country],
-          [country.iso3, country],
-        ]),
-      );
-    }
-  }
-
-  lazyInitializeStateMap() {
-    if (!this.stateMap) {
-      this.stateMap = this.statesData.reduce((map, state) => {
-        if (!map.has(state.country_code)) {
-          map.set(state.country_code, []);
-        }
-        map.get(state.country_code).push(state);
-        return map;
-      }, new Map());
-    }
-  }
-
-  memoize(fn) {
-    const cache = new Map();
-    return (...args) => {
-      const key = args.join(",");
-      if (cache.has(key)) return cache.get(key);
-      const result = fn.apply(this, args);
-      cache.set(key, result);
-      return result;
-    };
   }
 
   getCachedOrExecute(key, executeFn) {
@@ -90,39 +64,37 @@ class I18nAtlas {
     return result;
   }
 
-  getAllCountries = this.memoize(() => {
-    this.preloadData();
-    return [...this.countriesData];
-  });
+  async getAllCountries() {
+    await this.loadCountriesData();
+    return this.getCachedOrExecute("allCountries", () => [
+      ...this.countriesData,
+    ]);
+  }
 
-  getCountryByCode = this.memoize((code) => {
-    this.preloadData();
-    if (this.options.useMap) {
-      this.lazyInitializeCountryMap();
-      return this.countryMap.get(code);
-    }
-    return this.countriesData.find(
-      (country) =>
-        this.countryCodeSet.has(code) &&
-        (country.iso2 === code || country.iso3 === code),
+  async getCountryByCode(code) {
+    await this.loadCountriesData();
+    return this.getCachedOrExecute(`country:${code}`, () =>
+      this.options.useMap
+        ? this.countryMap.get(code)
+        : this.countriesData.find(
+            (country) => country.iso2 === code || country.iso3 === code,
+          ),
     );
-  });
+  }
 
-  getAllStates = this.memoize(() => {
-    this.preloadData();
-    return [...this.statesData];
-  });
+  async getAllStates() {
+    await this.loadStatesData();
+    return this.getCachedOrExecute("allStates", () => [...this.statesData]);
+  }
 
-  getStatesByCountry = this.memoize((countryCode) => {
-    this.preloadData();
-    if (this.options.useMap) {
-      this.lazyInitializeStateMap();
-      return [...(this.stateMap.get(countryCode) || [])];
-    }
-    return this.statesData.filter(
-      (state) => state.country_code === countryCode,
+  async getStatesByCountry(countryCode) {
+    await this.loadStatesData();
+    return this.getCachedOrExecute(`states:${countryCode}`, () =>
+      this.options.useMap
+        ? [...(this.stateMap.get(countryCode) || [])]
+        : this.statesData.filter((state) => state.country_code === countryCode),
     );
-  });
+  }
 }
 
 export default I18nAtlas;

@@ -66,7 +66,6 @@ declare module "i18n-atlas" {
   }
 
   export interface I18nAtlasOptions {
-    preload?: boolean;
     useMap?: boolean;
     cacheResults?: boolean;
     cacheDuration?: number;
@@ -75,16 +74,13 @@ declare module "i18n-atlas" {
   export default class I18nAtlas {
     constructor(options?: I18nAtlasOptions);
 
-    getAllCountries: () => Country[];
-    getCountryByCode: (code: string) => Country | undefined;
-    getAllStates: () => State[];
-    getStatesByCountry: (countryCode: string) => State[];
+    getAllCountries(): Promise<Country[]>;
+    getCountryByCode(code: string): Promise<Country | undefined>;
+    getAllStates(): Promise<State[]>;
+    getStatesByCountry(countryCode: string): Promise<State[]>;
 
-    private preloadData(): void;
-    private initializeCountryCodeSet(): void;
-    private lazyInitializeCountryMap(): void;
-    private lazyInitializeStateMap(): void;
-    private memoize<T extends (...args: any[]) => any>(fn: T): T;
+    private loadCountriesData(): Promise<void>;
+    private loadStatesData(): Promise<void>;
     private getCachedOrExecute<T>(key: string, executeFn: () => T): T;
   }
 }
